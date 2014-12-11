@@ -3200,7 +3200,7 @@
 		); },
 		_indexHeader_template: function( index ) {
 			var closed = index.state === "close";
-			var line1 = closed ? "index: close" : ( "size: " + (index.status && index.status.index ? ut.byteSize_template( index.status.index.primary_size_in_bytes ) + " (" + ut.byteSize_template( index.status.index.size_in_bytes ) + ")" : "unknown" ) ); 
+			var line1 = closed ? "index: close" : ( "size: " + (index.status && index.status.index ? ut.byteSize_template( index.status.index.primary_size_in_bytes ) + " (" + ut.byteSize_template( index.status.index.size_in_bytes ) + ")" : "unknown" ) );
 			var line2 = closed ? "\u00A0" : ( "docs: " + (index.status && index.status.docs ? index.status.docs.num_docs.toLocaleString() + " (" + index.status.docs.max_doc.toLocaleString() + ")" : "unknown" ) );
 			return index.name ? { tag: "TH", cls: (closed ? "close" : ""), children: [
 				{ tag: "H3", text: index.name },
@@ -3208,6 +3208,35 @@
 				{ tag: "DIV", text: line2 },
 				this.interactive ? this._indexHeaderControls_template( index ) : null
 			] } : [ { tag: "TD" }, { tag: "TH" } ];
+		},
+		_nodeHeader_template: function (node) {
+			return node.name ? { tag: "TH", cls: (node.master_node ? " master": ""), children: [
+				this._nodeIcon_template( node ),
+				{ tag: "TH", children: node.name === "Unassigned" ? [
+					{ tag: "H3", text: node.name }
+				] : [
+					{ tag: "H3", text: node.cluster.name },
+					{ tag: "DIV", text: node.cluster.hostname },
+					this.interactive ? this._nodeControls_template( node ) : null
+				] }
+			]} : [{ tag: "TH" } ];
+		},
+		_indexRow_template: function (cluster, index) {
+			var closed = index.state === "close";
+			var line1 = closed ? "index: close" : ( "size: " + (index.status && index.status.index ? ut.byteSize_template( index.status.index.primary_size_in_bytes ) + " (" + ut.byteSize_template( index.status.index.size_in_bytes ) + ")" : "unknown" ) );
+			var line2 = closed ? "\u00A0" : ( "docs: " + (index.status && index.status.docs ? index.status.docs.num_docs.toLocaleString() + " (" + index.status.docs.max_doc.toLocaleString() + ")" : "unknown" ) );
+
+			return { tag: "TR", cls: "uiNodesView-node " + (closed ? "close" : ""), children: [
+				{ tag: "TD", children: [
+					{ tag: "H3", text: index.name },
+					{ tag: "DIV", text: line1 },
+					{ tag: "DIV", text: line2 },
+					this._aliasRender_template_in_row.bind(this)(this.interactive, cluster, index),
+					this.interactive ? this._indexHeaderControls_template( index ) : null
+				] }
+			].concat(cluster.nodes.map(function (node) {
+				return node.routings.filter(function(r){return r.name==index.name;}).map(this._routing_template, this);
+			}.bind(this)))};
 		},
 		_aliasRender_template_none: function( cluster, indices ) {
 			return null;
@@ -3246,12 +3275,32 @@
 				}, this ) ) };
 			}, this )	};
 		},
+		_aliasRender_template_in_row: function (interactive, cluster, index) {
+			var clusterAliasIndex = cluster.aliases.indexOf(cluster.aliases.filter(function(a){return a.name == index.name})[0]);
+			return { tag: "DIV", children: [
+					index.metadata.aliases.map(function (alias, row) {
+						return {
+							tag: "DIV",
+							css: { background: '#' + '9ce9c7fc9'.substr((row+6)%7,3), padding: "2px 20px" },
+							text: alias,
+							cls: "uiNodesView-hasAlias min max",
+							children: interactive ? [
+								{
+									tag: 'SPAN',
+									text: i18n.text("General.CloseGlyph"),
+									cls: 'uiNodesView-hasAlias-remove',
+									onclick: this._deleteAliasAction_handler.bind(this, index, {name: alias})
+								}
+							] : null
+						}
+					}.bind(this))
+				]}
+		},
 		_main_template: function(cluster, indices) {
 			return { tag: "TABLE", cls: "table uiNodesView", children: [
 				this._styleSheetEl,
-				{ tag: "THEAD", children: [ { tag: "TR", children: indices.map(this._indexHeader_template, this) } ] },
-				this._aliasRenderFunction( cluster, indices ),
-				{ tag: "TBODY", children: cluster.nodes.map(this._node_template, this) }
+				{ tag: "THEAD", children: [ { tag: "TR", children: [{}].concat(cluster.nodes).map(this._nodeHeader_template, this) } ] },
+				{ tag: "TBODY", children: indices.filter(function(i){return i.name;}).map(this._indexRow_template.bind(this, cluster), this) }
 			] };
 		}
 
