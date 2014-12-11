@@ -1,8 +1,10 @@
 h1. elasticsearch-head
 
+h2. Now with inverted table. Indexes down, nodes across.
+
 h2. A web front end for an Elasticsearch cluster
 
-h3. "http://mobz.github.io/elasticsearch-head":http://mobz.github.io/elasticsearch-head
+h3. "http://glasseyes42.github.io/elasticsearch-head":http://glasseyes42.github.io/elasticsearch-head
 
 h2. Installing and Running
 
@@ -10,7 +12,7 @@ There are two main ways of running and installing elasticsearch-head
 
 h4. Running as a plugin of Elasticsearch
 
-* @sudo elasticsearch/bin/plugin -install mobz/elasticsearch-head@
+* @sudo elasticsearch/bin/plugin -install glasseyes42/elasticsearch-head@
 * @open http://localhost:9200/_plugin/head/@
 
 This will automatically download the latest version of elasticsearch-head from github and run it as a plugin within the elasticsearch cluster. In this mode;
@@ -20,7 +22,7 @@ This will automatically download the latest version of elasticsearch-head from g
 h4. Running with built in server
 
 * enable "cors":http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/modules-http.html by add @http.cors.enabled: true@ in elasticsearch configuration
-* @git clone git://github.com/mobz/elasticsearch-head.git@
+* @git clone git://github.com/glasseyes42/elasticsearch-head.git@
 * @cd elasticsearch-head@
 * @npm install@
 * @grunt server@
